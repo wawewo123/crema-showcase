@@ -37,6 +37,12 @@ Export downloads a JSON file with your visits and their photos. Import replaces 
 
 The map is still Leaflet and OpenStreetMap, graded dark with CSS, with no API key. Pins that would overlap cluster, and the badge is the real count. The selected café is always its own pin, using the full photo the card uses. **Open in Maps** is an ordinary Google link. Tiles are not cached by the service worker. If they cannot load, the pins and the list remain and a note says the map needs the internet.
 
+## The cup was too small, and why
+
+The first phone screenshot put a 104 px canvas in the top-left of a 329 px ring. Measuring the boxes showed two separate mistakes. The canvas width was 54% of its wrapper, so it sat at the start of that box instead of in the middle. The ring was a square taller than the space above the controls, so the grid pinned it to the top and the visible part was an empty arc. The fix is one square that fits the width and the height (`min(100cqw, 100cqh)`, at least 250 px tall), with the ring filling that square and the cup centred at 82% of it. At 375, 390, and 402 px wide the cup centre and the ring centre now match, and the canvas is about 250–270 px. A 667 px-tall screen scrolls a little so the cup does not shrink back down.
+
+The crema texture is a 480 px image built once: curved streaks, fine speckles, and small bubbles, drawn near 1:1 so it is not a magnified blur. It is still an illustration. It will not match the photograph in the approved still.
+
 ## What was verified, and what was not
 
 Commands that passed in this workspace:

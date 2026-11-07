@@ -35,52 +35,72 @@ function mix(a: number[], b: number[], t: number) {
   return a.map((v, i) => v + (b[i] - v) * t)
 }
 
-/** Built once. Tiger-striped crema from value noise — an illustration, not a fluid sim. */
+function fbm(noise: (x: number, y: number) => number, x: number, y: number) {
+  let amp = 0.5
+  let sum = 0
+  let value = 0
+  let f = 1
+  for (let i = 0; i < 5; i++) {
+    value += amp * noise(x * f, y * f)
+    sum += amp
+    f *= 2
+    amp *= 0.5
+  }
+  return value / sum
+}
+
+/** Built once. Fine crema marbling — an illustration, not a fluid sim. */
 function buildCrema() {
   if (crema) return crema
-  const s = 256
+  const s = 480
   const canvas = document.createElement('canvas')
   canvas.width = s
   canvas.height = s
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas
-  const n1 = noiseGrid(mulberry32(0xc0ffee), 8)
-  const n2 = noiseGrid(mulberry32(0x51a7), 8)
+  const n1 = noiseGrid(mulberry32(0xc0ffee), 16)
+  const n2 = noiseGrid(mulberry32(0x51a7), 16)
   const img = ctx.createImageData(s, s)
-  const c0 = [42, 22, 12]
-  const c1 = [112, 58, 26]
-  const c2 = [176, 104, 48]
-  const c3 = [226, 184, 118]
+  const c0 = [62, 32, 16]
+  const c1 = [128, 68, 30]
+  const c2 = [176, 108, 52]
+  const c3 = [214, 168, 104]
   for (let y = 0; y < s; y++) {
     for (let x = 0; x < s; x++) {
       const u = x / s
       const v = y / s
-      const w1 = n1(u * 3.1, v * 3.1)
-      const w2 = n2(u * 2.4 + 3.2, v * 2.4 + 1.4)
-      const uu = u + (w1 - 0.5) * 0.2
-      const vv = v + (w2 - 0.5) * 0.2
-      const stripe = Math.sin((uu * 2.2 + vv * 9.2 + w1 * 3.1) * Math.PI)
-      const fine = n1(uu * 6.5 + 1.7, vv * 6.5 + 0.6)
-      let t = 0.5 + stripe * 0.18 + (fine - 0.5) * 0.26 + (w2 - 0.5) * 0.1
+      const dx = u - 0.5
+      const dy = v - 0.48
+      const rad = Math.hypot(dx, dy)
+      const ang = Math.atan2(dy, dx)
+      const warp = fbm(n1, u * 4.5, v * 4.5)
+      const curl = ang * 3.2 + rad * 28 + warp * 5.5
+      const streak = Math.sin(curl) * 0.55 + Math.sin(curl * 2.15 + 1.3) * 0.25
+      const mottled = fbm(n2, u * 9 + warp, v * 9)
+      const grain = n1(u * 48, v * 48)
+      let t = 0.56 + streak * 0.07 + (mottled - 0.5) * 0.22 + (grain - 0.5) * 0.16 - rad * 0.22
       t = Math.min(1, Math.max(0, t))
-      const col =
-        t < 0.34 ? mix(c0, c1, t / 0.34) : t < 0.72 ? mix(c1, c2, (t - 0.34) / 0.38) : mix(c2, c3, (t - 0.72) / 0.28)
-      const dx = u - 0.42
-      const dy = v - 0.38
-      const centre = Math.max(0, 1 - Math.hypot(dx, dy) * 2.15)
+      const col = t < 0.4 ? mix(c0, c1, t / 0.4) : t < 0.75 ? mix(c1, c2, (t - 0.4) / 0.35) : mix(c2, c3, (t - 0.75) / 0.25)
       const i = (y * s + x) * 4
-      img.data[i] = col[0] + centre * 16
-      img.data[i + 1] = col[1] + centre * 12
-      img.data[i + 2] = col[2] + centre * 6
+      img.data[i] = col[0]
+      img.data[i + 1] = col[1]
+      img.data[i + 2] = col[2]
       img.data[i + 3] = 255
     }
   }
   ctx.putImageData(img, 0, 0)
   const bubbles = mulberry32(7)
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 36; i++) {
+    const px = 48 + bubbles() * (s - 96)
+    const py = 48 + bubbles() * (s - 96)
+    const rad = 0.7 + bubbles() * 1.6
     ctx.beginPath()
-    ctx.fillStyle = `rgba(255,236,214,${0.12 + bubbles() * 0.22})`
-    ctx.arc(36 + bubbles() * 180, 36 + bubbles() * 180, 0.8 + bubbles() * 2.2, 0, Math.PI * 2)
+    ctx.fillStyle = `rgba(255, 236, 214, ${0.18 + bubbles() * 0.28})`
+    ctx.arc(px, py, rad, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.fillStyle = 'rgba(90, 48, 22, 0.18)'
+    ctx.arc(px + rad * 0.3, py + rad * 0.35, rad * 0.45, 0, Math.PI * 2)
     ctx.fill()
   }
   crema = canvas
@@ -127,15 +147,17 @@ export function drawCup(ctx: CanvasRenderingContext2D, size: number, frame: CupF
   ctx.fillRect(0, 0, size, size)
   const tex = buildCrema()
   ctx.save()
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
   ctx.translate(cx, cy)
   ctx.rotate(swirl)
-  const cover = inner * 2.35
+  const cover = inner * 2.05
   ctx.drawImage(tex, -cover / 2, -cover / 2, cover, cover)
   ctx.restore()
-  const vig = ctx.createRadialGradient(cx - inner * 0.12, cy - inner * 0.18, radius * 0.2, cx, cy, radius)
-  vig.addColorStop(0, 'rgba(255,214,160,0.06)')
-  vig.addColorStop(0.62, 'rgba(0,0,0,0)')
-  vig.addColorStop(1, 'rgba(18,8,4,0.62)')
+  const vig = ctx.createRadialGradient(cx - inner * 0.08, cy - inner * 0.12, radius * 0.25, cx, cy, radius)
+  vig.addColorStop(0, 'rgba(255,220,176,0.05)')
+  vig.addColorStop(0.72, 'rgba(0,0,0,0)')
+  vig.addColorStop(1, 'rgba(28,12,6,0.38)')
   ctx.fillStyle = vig
   ctx.fillRect(0, 0, size, size)
   const wash = Math.min(0.2, Math.max(0, (light - 0.92) * 0.65))

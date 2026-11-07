@@ -107,8 +107,10 @@ export function Brew({ say, active }: { say: (m: string) => void; active: boolea
   return (
     <div className="brew" data-testid="brew-screen">
       <div className="cup-stack">
-        <RingGauge shot={s} />
-        <CupStage active={active} reduced={reduced} playKey={playKey} yieldG={s.y} onPlaying={onPlaying} />
+        <div className="gauge">
+          <RingGauge shot={s} />
+          <CupStage active={active} reduced={reduced} playKey={playKey} yieldG={s.y} onPlaying={onPlaying} />
+        </div>
       </div>
       <p className="readout" aria-hidden="true">
         <span>

@@ -144,36 +144,42 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: 
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 16px 10px;
+  padding: 0 16px 4px;
   overflow-x: hidden;
   overflow-y: auto;
 }
 .cup-stack {
   flex: 1 1 auto;
-  min-height: 210px;
+  min-height: 250px;
   display: grid;
   place-items: center;
-  position: relative;
+  container-type: size;
 }
-.cup-stack > .ring,
-.cup-stack > .hero-cup { grid-area: 1 / 1; }
-.ring { width: min(92%, 340px); height: auto; overflow: visible; }
-.hero-cup, .cup-canvas, .cup-fallback { width: min(54%, 210px); aspect-ratio: 1; }
-.cup-canvas, .cup-fallback { display: block; border-radius: 50%; }
+.gauge {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  display: grid;
+  place-items: center;
+}
+.gauge > .ring,
+.gauge > .hero-cup { grid-area: 1 / 1; justify-self: center; align-self: center; }
+.ring { width: 100%; height: 100%; display: block; }
+.hero-cup { width: 82%; aspect-ratio: 1; display: grid; place-items: center; }
+.cup-canvas, .cup-fallback { width: 100%; height: 100%; display: block; }
 .readout {
   display: flex;
   justify-content: center;
-  gap: 22px;
+  gap: 18px;
   margin: 0;
   font-variant-numeric: tabular-nums;
   font-weight: 430;
-  font-size: clamp(40px, 12vw, 56px);
+  font-size: clamp(36px, 10vw, 48px);
   letter-spacing: -0.045em;
   line-height: 1;
 }
 .readout small { font-size: 0.42em; margin-left: 3px; color: var(--label); font-weight: 450; }
 .caption {
-  margin: 6px 0 12px;
+  margin: 2px 0 6px;
   text-align: center;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -184,7 +190,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: 
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .chip {
   min-height: 44px;
@@ -200,7 +206,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: 
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 22px;
-  padding: 12px 14px 6px;
+  padding: 8px 12px 2px;
 }
 .slider-head, .drawer-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .slider-head h2, .drawer-h h2, .place-copy h2, .visit-form h2 { font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 0; }
@@ -264,7 +270,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: 
   min-height: 52px;
   font-size: 18px;
 }
-.pour { width: 100%; margin-top: 12px; }
+.pour { width: 100%; margin-top: 8px; }
 .btn { min-height: 44px; padding: 0 14px; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .btn.small { min-height: 44px; width: fit-content; font-size: 15px; }
 .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
