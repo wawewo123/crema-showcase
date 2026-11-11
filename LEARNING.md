@@ -33,7 +33,7 @@ Framer Motion still handles small UI motion. GSAP still plays the chart pour, an
 
 Version 1 journals (the previous app’s shape) are read and promoted. A stored `demo: true` flag is stripped, because sample cafés are not your history and are never written. Unreadable data is copied to `crema.journal.backup` and the app opens empty instead of crashing.
 
-Export downloads a JSON file with your visits and their photos. Import replaces the on-device journal only after the file validates (version, ids, coordinates, dates, JPEG/PNG/WebP data URLs, under 12 MB). A bad file changes nothing. Clear asks first and reminds you there is no account to restore from.
+Export downloads one JSON backup. Version 3 includes the café journal and the dial-in log. An older version 1 or 2 file still imports as a journal and does not delete dial-in data. A bad file changes nothing. Clear asks first and reminds you there is no account to restore from.
 
 The map is still Leaflet and OpenStreetMap, graded dark with CSS, with no API key. Pins that would overlap cluster, and the badge is the real count. The selected café is always its own pin, using the full photo the card uses. **Open in Maps** is an ordinary Google link. Tiles are not cached by the service worker. If they cannot load, the pins and the list remain and a note says the map needs the internet.
 
@@ -67,3 +67,21 @@ Name one thing, the constraint, and the check. Examples you can paste:
 > Run the built file on my iPhone and tell me if the pour stays smooth and if the tab bar clears the home indicator. Do not change code unless something is actually broken.
 
 What worked on this round: the pictures were treated as approved, the maths file was frozen, demo data stayed labelled, and screenshots were required before calling the look done. When something is off, point at the moment (“the curve is a brown block”, “the pin photo is not the card photo”) rather than at a mood.
+
+## Dial-in: why the data is shaped this way
+
+The Dial tab is a real brew, not the simulated cup. It had to work on an iPhone Home Screen with no account and no signal, so the rules and the catalog are in the file, and your kits, beans, and brews are in IndexedDB next to the journal.
+
+The catalog is a list of records, not a wiki. Each machine and grinder names one source URL. If that page does not state PID, pressure, a step count, or a grind range, the field is `null`. The app will not fill the gap with a guess. This starter set is **7 machines and 5 grinders**, taken from maker pages for Gaggia, Sage, Rancilio, Profitec, Lelit, La Marzocco, Niche, Fellow, Baratza, and Mahlkönig. It is not a full market list. A café staple is missing until someone adds a sourced row. Custom kit covers a machine that is not in the list at all.
+
+Blank fields are fillable on your own kit. The override is a second object, keyed by catalog id, stored only on the device. If the source already has 9 bar, an override of 8 bar is dropped. The screen says **sourced** or **added by you**. The same length and range checks used for a custom machine apply (pressure 1–20 bar, portafilter 49–60 mm, burrs 30–120 mm, steps 2–400).
+
+Recipes and suggestions are pure functions, which is why they could be tested without a browser. A light roast lengthens the ratio and raises the water temperature. Beans under 8 days off roast get a longer bloom on V60 and AeroPress. The suggestion module returns one change. Sour is judged before “weak”, so a sour and weak espresso does not get two edits. A stepped grinder is told “2 steps”. A stepless grinder is told “a small turn”, because a step count would be fiction. Each rule id is in `src/dial/rules.ts` with a one-sentence reason. To tune one, change that branch and the test that names it. Do not bury a second suggestion in the same return.
+
+The timer stores the moment you pressed start. The 250 ms interval only repaints. If the phone sleeps, the next paint subtracts that timestamp from the current time. It does not add up missed ticks. iOS can still suspend the page during a 16 hour cold brew, so the copy says to reopen Crema; the clock is right when you do. There is no push alert.
+
+How this was directed: the method list, the taste scales, the one-change rule, and the “do not invent specs” rule were in the request before code. The follow-up that blank specs must be user-fillable, labelled, and never written back onto the source record was added to the spec before the screen was built. Screenshots of the kit list, a filled PID marked “added by you”, a bean form, a V60 bloom at 0:01, the espresso line “Grind 2 steps finer.”, and history were checked by looking at the images, not only by an overflow number.
+
+`npx vitest run` for this round: 48 tests passed. `npm run build` writes `dist/index.html` (about 724 KB) and `dist/sw.js` cache `crema-shell-v4`. Phone widths 375, 390, and 402 had no horizontal overflow on Dial. This was Chrome emulation, not a physical iPhone.
+
+Next iteration, one change at a time: add a sourced row for a machine you actually use, with the maker URL and nulls where the page is silent. Or change a single rule (“sour V60 should raise temperature before grind”) and update the test that names that rule id.

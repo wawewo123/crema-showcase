@@ -110,7 +110,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: 
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
   padding: 6px 12px calc(8px + env(safe-area-inset-bottom));
   background: rgba(20, 17, 15, 0.92);
@@ -569,6 +569,22 @@ th { color: var(--label); font-weight: 560; }
 .visit-meta { color: var(--label); font-size: 13px; }
 .toggle { flex-direction: row; align-items: center; gap: 10px; min-height: 44px; margin-bottom: 8px; }
 .toggle input { width: 20px; height: 20px; }
+
+.dial { flex: 1; min-height: 0; overflow: auto; }
+.dial-pad { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px 16px; }
+.dial-pad h2 { font-family: var(--serif); font-weight: 500; font-size: 28px; margin: 0; }
+.dial-pad input, .dial-pad select, .dial-pad textarea {
+  width: 100%; font-size: 16px; color: var(--text); background: #14110f; border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-height: 44px;
+}
+.method-row, .scale { display: flex; gap: 6px; }
+.method-row .chip, .scale .chip { flex: 1; min-width: 0; }
+.btn.wide { width: 100%; }
+.timer-readout { margin: 0; text-align: center; font-size: 64px; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+.spec-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.spec-list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; min-height: 44px; align-items: center; }
+.spec-list em { grid-column: 2; font-style: normal; color: var(--amber); font-size: 12px; }
+.suggestion { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.suggestion p { margin: 4px 0; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { usePrefersReducedMotion } from '../lib/motion'
 import { DEMO_VISITS } from './demo'
-import { buildVisit, emptyState, exportDocument, upsertVisit, validateImport } from './migrate'
+import { exportAll, validateBackup } from '../dial/backup'
+import { loadDial, saveDial } from '../dial/store'
+import { buildVisit, emptyState, upsertVisit } from './migrate'
 import { filterByMonth, monthLabel, monthTicks } from './months'
 import { cardImageSrc } from './pins'
 import { browserRepo } from './repo'
@@ -154,16 +156,17 @@ export function Journal({ say, active, onDemos }: { say: (m: string) => void; ac
     say('Pin dropped. Fill in the visit details.')
     setTimeout(() => nameRef.current?.focus({ preventScroll: true }), 40)
   }
-  const download = () => {
+  const download = async () => {
     if (!store) return
-    const json = exportDocument(store, new Date().toISOString())
+    const dial = await loadDial()
+    const json = exportAll(store, dial, new Date().toISOString())
     const blob = new Blob([json], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `crema-journal-${today()}.json`
+    a.download = `crema-backup-${today()}.json`
     a.click()
     URL.revokeObjectURL(a.href)
-    say('Journal backup downloaded')
+    say('Backup downloaded')
   }
   const onImport = async (file: File | undefined) => {
     if (!file || !store) return
@@ -175,16 +178,18 @@ export function Journal({ say, active, onDemos }: { say: (m: string) => void; ac
       setError('That file is not JSON.')
       return
     }
-    const result = validateImport(data, text.length)
+    const result = validateBackup(data, text.length)
     if (!result.ok) {
       setError(result.errors.join(' '))
       return
     }
+    if (!result.journal) return
     if (!window.confirm('Replace the journal saved in this browser with this backup?')) return
-    await commit(result.state)
+    await commit(result.journal)
+    if (result.dial) await saveDial(result.dial)
     setSelectedId(null)
     setFitKey((k) => k + 1)
-    say(`Imported ${result.state.entries.length} visits`)
+    say(`Imported ${result.journal.entries.length} visits`)
   }
   const clearAll = async () => {
     if (!window.confirm('Remove every visit saved in this browser? Export a backup first if you want to keep them. Crema has no account to restore from.')) return

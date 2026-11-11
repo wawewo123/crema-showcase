@@ -4,19 +4,22 @@ import { Brew } from './components/Brew'
 import { tokens } from './theme/tokens'
 
 const Journal = lazy(() => import('./journal/Journal').then((m) => ({ default: m.Journal })))
+const Dial = lazy(() => import('./dial/Dial').then((m) => ({ default: m.Dial })))
 
-type Tab = 'brew' | 'journal'
+type Tab = 'brew' | 'dial' | 'journal'
+const ORDER: Tab[] = ['brew', 'dial', 'journal']
 
-const fromHash = (): Tab => (location.hash === '#journal' ? 'journal' : 'brew')
+const fromHash = (): Tab => (location.hash === '#journal' ? 'journal' : location.hash === '#dial' ? 'dial' : 'brew')
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(fromHash)
   const [journalOn, setJournalOn] = useState(fromHash() === 'journal')
+  const [dialOn, setDialOn] = useState(fromHash() === 'dial')
   const [live, setLive] = useState('')
   const [demoOn, setDemoOn] = useState(true)
   const say = useCallback((m: string) => setLive(m), [])
   const onDemos = useCallback((on: boolean) => setDemoOn(on), [])
-  const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ brew: null, journal: null })
+  const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ brew: null, dial: null, journal: null })
 
   useEffect(() => {
     const root = document.documentElement
@@ -42,13 +45,16 @@ export default function App() {
   const go = (next: Tab, focus = false) => {
     setTab(next)
     if (next === 'journal') setJournalOn(true)
-    history.replaceState(null, '', next === 'journal' ? '#journal' : '#brew')
+    if (next === 'dial') setDialOn(true)
+    history.replaceState(null, '', next === 'brew' ? '#brew' : `#${next}`)
     if (focus) tabRefs.current[next]?.focus()
   }
   const onTabKey = (e: KeyboardEvent<HTMLElement>) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
     e.preventDefault()
-    go(tab === 'brew' ? 'journal' : 'brew', true)
+    const i = ORDER.indexOf(tab)
+    const next = ORDER[(i + (e.key === 'ArrowRight' ? 1 : ORDER.length - 1)) % ORDER.length]
+    go(next, true)
   }
 
   return (
@@ -59,23 +65,28 @@ export default function App() {
       <div className="stage">
         <div className="phone">
           <header className="top">
-            <h1>{tab === 'brew' ? 'Crema' : 'Journal'}</h1>
+            <h1>{tab === 'journal' ? 'Journal' : tab === 'dial' ? 'Dial' : 'Crema'}</h1>
             {tab === 'brew' ? (
               <span className="pill" aria-label="Brew figures and the pour are simulated">
                 Simulated
               </span>
-            ) : (
-              demoOn && (
-                <span className="pill" aria-label="Sample cafés on this map are fictional">
-                  Demo
-                </span>
-              )
-            )}
+            ) : tab === 'journal' && demoOn ? (
+              <span className="pill" aria-label="Sample cafés on this map are fictional">
+                Demo
+              </span>
+            ) : null}
           </header>
           <main id="main" role="tabpanel" aria-labelledby={`tab-${tab}`} tabIndex={-1}>
             <div className="pane" hidden={tab !== 'brew'}>
               <Brew say={say} active={tab === 'brew'} />
             </div>
+            {dialOn && (
+              <div className="pane" hidden={tab !== 'dial'}>
+                <Suspense fallback={<p className="quiet pad">Opening dial-in…</p>}>
+                  <Dial say={say} />
+                </Suspense>
+              </div>
+            )}
             {journalOn && (
               <div className="pane" hidden={tab !== 'journal'}>
                 <Suspense fallback={<p className="quiet pad">Opening the map…</p>}>
@@ -99,6 +110,21 @@ export default function App() {
             >
               <CupIcon />
               Brew
+            </button>
+            <button
+              ref={(el) => {
+                tabRefs.current.dial = el
+              }}
+              role="tab"
+              id="tab-dial"
+              aria-selected={tab === 'dial'}
+              aria-controls="main"
+              tabIndex={tab === 'dial' ? 0 : -1}
+              type="button"
+              onClick={() => go('dial')}
+            >
+              <DialIcon />
+              Dial
             </button>
             <button
               ref={(el) => {
@@ -130,6 +156,15 @@ function CupIcon() {
     <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
       <circle cx="12" cy="12" r="3.2" fill="currentColor" />
+    </svg>
+  )
+}
+
+function DialIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12 12l4-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   )
 }
