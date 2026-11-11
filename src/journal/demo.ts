@@ -1,0 +1,73 @@
+import { cortado, espresso, flatWhite, pourOver, storefront } from './thumbs'
+import type { Visit } from './types'
+
+// SYNTHETIC demo visits. Fictional café names; neighbourhoods and coordinates
+// are approximate, only so the map reads geographically. Leo has not visited these.
+export const DEMO_VISITS: Visit[] = [
+  {
+    id: 'demo-kiln',
+    demo: true,
+    name: 'Kiln & Crema (fictional)',
+    area: 'Hackney, London',
+    notes: 'Demo entry · Flat white, chocolatey and round. Busy Saturday bar, calm workflow.',
+    date: '2026-10-24',
+    lat: 51.5465,
+    lng: -0.0553,
+    photo: flatWhite,
+  },
+  {
+    id: 'demo-ember',
+    demo: true,
+    name: 'Little Ember Roasters (fictional)',
+    area: 'Stokes Croft, Bristol',
+    notes: 'Demo entry · V60 of a washed Ethiopian. Bright, tea-like, lovely clean finish.',
+    date: '2026-10-11',
+    lat: 51.4635,
+    lng: -2.5895,
+    photo: pourOver,
+  },
+  {
+    id: 'demo-tamper',
+    demo: true,
+    name: 'The Tamper Room (fictional)',
+    area: 'Northern Quarter, Manchester',
+    notes: 'Demo entry · Cortado. Dense milk texture, slightly roasty espresso underneath.',
+    date: '2026-09-27',
+    lat: 53.4842,
+    lng: -2.2358,
+    photo: cortado,
+  },
+  {
+    id: 'demo-saltwind',
+    demo: true,
+    name: 'Saltwind Coffee (fictional)',
+    area: 'Leith, Edinburgh',
+    notes: 'Demo entry · Batch brew by the window. Simple, sweet, good value.',
+    date: '2026-08-30',
+    lat: 55.9755,
+    lng: -3.1725,
+    photo: storefront('#2f6b5e', '#2b1a12'),
+  },
+  {
+    id: 'demo-lanes',
+    demo: true,
+    name: 'Lanes Espresso Bar (fictional)',
+    area: 'North Laine, Brighton',
+    notes: 'Demo entry · Espresso, ran a touch long. Syrupy, dark fruit. Great almond croissant.',
+    date: '2026-08-15',
+    lat: 50.8275,
+    lng: -0.1385,
+    photo: espresso,
+  },
+  {
+    id: 'demo-copper',
+    demo: true,
+    name: 'Copper Kettle Coffee (fictional)',
+    area: 'Peckham, London',
+    notes: 'Demo entry · Oat flat white from a tiny hatch. Friendly bar, quick shots.',
+    date: '2026-07-19',
+    lat: 51.4693,
+    lng: -0.0692,
+    photo: storefront(),
+  },
+]
