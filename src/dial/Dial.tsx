@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { GRINDERS, MACHINES, grinderById, machineById, type Grinder, type Machine } from './catalog'
+import type { Grinder, Machine } from './catalog'
 import { bestForBean } from './history'
 import { MACHINE_KEYS, keepFillable, presentGrinder, presentMachine, type MachineKey } from './overrides'
 import { daysOffRoast, startingRecipe, type Method, type Process, type Recipe, type Roast } from './recipe'
 import { suggest, type Taste } from './rules'
 import type { Bean, DialState, SavedBrew, Setup } from './state'
-import { loadDial, saveDial } from './store'
+import { loadCatalog, loadDial, openSqlite, saveDial } from './store'
 import { elapsedMs, idleClock, pauseClock, resumeClock, startClock, type Clock } from './timer'
 import { validateBean, validateMachine } from './validate'
 import { newId } from '../journal/storage'
@@ -62,10 +62,17 @@ export function Dial({ say }: { say: (m: string) => void }) {
   const [taste, setTaste] = useState<Taste>({ sourBitter: 3, weakStrong: 3, notes: '' })
   const [shotSeconds, setShotSeconds] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [machines, setMachines] = useState<Machine[]>([])
+  const [grinders, setGrinders] = useState<Grinder[]>([])
 
   useEffect(() => {
-    loadDial().then((loaded) => {
+    openSqlite().then((mode) => {
+      document.documentElement.dataset.sqlite = mode
+    })
+    Promise.all([loadDial(), loadCatalog()]).then(([loaded, catalog]) => {
       setState(loaded)
+      setMachines(catalog.machines)
+      setGrinders(catalog.grinders)
       setSetupId(loaded.activeSetupId)
       setBeanId(loaded.beans[0]?.id ?? null)
     })
@@ -90,8 +97,8 @@ export function Dial({ say }: { say: (m: string) => void }) {
 
   const setup = state?.setups.find((s) => s.id === (setupId ?? state.activeSetupId)) ?? null
   const bean = state?.beans.find((b) => b.id === beanId) ?? null
-  const machine = setup?.machineId ? machineById(setup.machineId) : null
-  const grinder = setup?.grinderId ? grinderById(setup.grinderId) : null
+  const machine = setup?.machineId ? machines.find((item) => item.id === setup.machineId) ?? null : null
+  const grinder = setup?.grinderId ? grinders.find((item) => item.id === setup.grinderId) ?? null : null
 
   if (!state) return <p className="quiet pad">Opening dial-in…</p>
 
@@ -162,6 +169,8 @@ export function Dial({ say }: { say: (m: string) => void }) {
       )}
       {view === 'kits' && (
         <Kits
+          machines={machines}
+          grinders={grinders}
           state={state}
           onBack={() => setView('home')}
           onChange={persist}
@@ -191,7 +200,7 @@ export function Dial({ say }: { say: (m: string) => void }) {
           testId="kit-picker"
           query={query}
           setQuery={setQuery}
-          rows={MACHINES.filter((m) => `${m.brand} ${m.model}`.toLowerCase().includes(query.toLowerCase())).map((m) => ({
+          rows={machines.filter((m) => `${m.brand} ${m.model}`.toLowerCase().includes(query.toLowerCase())).map((m) => ({
             id: m.id,
             label: `${m.brand} ${m.model}`,
           }))}
@@ -210,7 +219,7 @@ export function Dial({ say }: { say: (m: string) => void }) {
           testId="grinder-picker"
           query={query}
           setQuery={setQuery}
-          rows={GRINDERS.filter((g) => `${g.brand} ${g.model}`.toLowerCase().includes(query.toLowerCase())).map((g) => ({
+          rows={grinders.filter((g) => `${g.brand} ${g.model}`.toLowerCase().includes(query.toLowerCase())).map((g) => ({
             id: g.id,
             label: `${g.brand} ${g.model}`,
           }))}
@@ -365,6 +374,8 @@ export function Dial({ say }: { say: (m: string) => void }) {
 }
 
 function Kits(props: {
+  machines: Machine[]
+  grinders: Grinder[]
   state: DialState
   activeId: string | null
   onBack: () => void
@@ -377,8 +388,8 @@ function Kits(props: {
 }) {
   const [name, setName] = useState('Home')
   const active = props.state.setups.find((s) => s.id === props.activeId) ?? null
-  const machine = active?.machineId ? machineById(active.machineId) : null
-  const grinder = active?.grinderId ? grinderById(active.grinderId) : null
+  const machine = active?.machineId ? props.machines.find((item) => item.id === active.machineId) ?? null : null
+  const grinder = active?.grinderId ? props.grinders.find((item) => item.id === active.grinderId) ?? null : null
   return (
     <div className="dial-pad" data-testid="kits">
       <button type="button" className="text-btn" onClick={props.onBack}>Back</button>

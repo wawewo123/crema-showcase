@@ -1,7 +1,10 @@
 import '@testing-library/jest-dom/vitest'
 
-HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext
+}
 
+if (typeof window !== 'undefined') {
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   configurable: true,
@@ -36,4 +39,5 @@ if (typeof ResizeObserver === 'undefined') {
     unobserve() {}
     disconnect() {}
   } as unknown as typeof ResizeObserver
+}
 }

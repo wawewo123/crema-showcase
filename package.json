@@ -9,9 +9,11 @@
     "test": "vitest run",
     "lint": "oxlint",
     "preview": "vite preview",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "validate:seed": "node --experimental-sqlite scripts/validate-seed.mjs"
   },
   "dependencies": {
+    "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
     "framer-motion": "^14.10.0",
     "gsap": "^3.15.1",
     "leaflet": "^1.9.4",

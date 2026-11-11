@@ -53,7 +53,8 @@ try {
     await page.waitForSelector('[data-testid="dial-screen"]')
     const extra = await overflow()
     if (extra > 1) throw new Error(`overflow ${width}: ${extra}`)
-    console.log('ok width', width)
+    const engine = await page.evaluate(() => document.documentElement.dataset.sqlite || 'unknown')
+    console.log('ok width', width, 'sqlite', engine)
   }
 
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true })

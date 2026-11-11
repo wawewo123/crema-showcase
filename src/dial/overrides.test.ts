@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { MACHINES, GRINDERS } from './catalog'
+import type { Machine } from './catalog'
 import { keepFillable, presentField, presentMachine } from './overrides'
+
+const gaggia = {
+  id: 'gaggia-classic-pro-e24',
+  brand: 'Gaggia',
+  model: 'Classic Pro E24',
+  category: 'home',
+  heating: 'single-boiler',
+  pid: null,
+  brewBar: 9,
+  pumpBar: 15,
+  portafilterMm: 58,
+  preInfusion: null,
+  flowControl: null,
+  sourceUrl: 'https://example.com',
+  sourceTitle: 'Example',
+} satisfies Machine
 
 describe('spec overrides', () => {
   it('labels a published value as sourced and ignores a conflicting override', () => {
@@ -10,7 +26,6 @@ describe('spec overrides', () => {
   })
 
   it('lets the user fill only blank Gaggia fields', () => {
-    const gaggia = MACHINES.find((m) => m.id === 'gaggia-classic-pro-e24')!
     const shown = presentMachine(gaggia, { pid: false, brewBar: 8 })
     expect(shown.brewBar).toEqual({ value: 9, origin: 'sourced' })
     expect(shown.pid).toEqual({ value: false, origin: 'yours' })
@@ -18,9 +33,4 @@ describe('spec overrides', () => {
     expect(keepFillable(gaggia, { pid: false, brewBar: 8 }, ['pid', 'brewBar'])).toEqual({ pid: false })
   })
 
-  it('does not invent an espresso range for the Niche Zero', () => {
-    const niche = GRINDERS.find((g) => g.id === 'niche-zero')!
-    expect(niche.espressoRange).toBeNull()
-    expect(niche.sourceUrl.startsWith('https://')).toBe(true)
-  })
 })

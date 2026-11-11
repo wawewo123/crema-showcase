@@ -85,3 +85,17 @@ How this was directed: the method list, the taste scales, the one-change rule, a
 `npx vitest run` for this round: 48 tests passed. `npm run build` writes `dist/index.html` (about 724 KB) and `dist/sw.js` cache `crema-shell-v4`. Phone widths 375, 390, and 402 had no horizontal overflow on Dial. This was Chrome emulation, not a physical iPhone.
 
 Next iteration, one change at a time: add a sourced row for a machine you actually use, with the maker URL and nulls where the page is silent. Or change a single rule (“sour V60 should raise temperature before grind”) and update the test that names that rule id.
+
+## Why the catalog is SQL now
+
+The equipment list and your dial-in rows (kits, the fills you add on top of blank specs, beans, brews) are SQLite tables, not a TypeScript array and not one JSON blob. Adding a machine is an `INSERT` in `db/seed/machines.sql` with its `https` source URL. `db/schema.sql` is version 1: foreign keys, `CHECK` ranges for pressure, dose, temperature and text length, and indexes for brand and for brews by bean. `npm run validate:seed` loads that SQL and fails if a source is missing or a constraint does not bite.
+
+The engine is the official `@sqlite.org/sqlite-wasm` build (SQLite 3.54). On a secure page, including an iPhone Home Screen app from iOS 16.4 onward, it stores the file with the `opfs-sahpool` VFS. That uses `createSyncAccessHandle()` inside the library’s worker. It does not need the COOP/COEP headers. Those headers would stop the OpenStreetMap tiles on the Journal tab. A May 2026 survey of browser SQLite lists this VFS as working in Safari 16.4+ without those headers, and Apple’s OPFS, including sync access handles, is available to Home Screen web apps. Only one connection can hold the file. Private browsing has no OPFS.
+
+Opening `dist/index.html` from disk is not a secure context, so OPFS is not there. The same WASM build then keeps the database in memory and writes a snapshot into IndexedDB, which is the store this app already used. sql.js would have been the fallback if OPFS had been unusable on iOS. It is usable, so the official build stays.
+
+`dist/index.html` grew from about 724 KB (gzip about 234 KB) to about 2.18 MB (gzip about 844 KB). Almost all of the extra weight is the inlined SQLite WASM. The library also mentions a second worker file; the build drops that unused chunk. The service worker cache is `crema-shell-v5`, so a Home Screen icon picks up the new shell.
+
+A later community phase can copy these rows into Postgres (Supabase). The mapping is written in `db/POSTGRES.md`. There is no server in this build. Export is still JSON: version 3 carries the journal and the dial-in rows, and a version 1 or 2 journal file still imports without deleting dial-in data. The first launch copies a previous IndexedDB dial document into the SQL tables once.
+
+Tests that passed here: `npx vitest run` (schema seed, the pressure check, the “cannot override a sourced field” trigger, one-time import, and the older suite) and `npm run validate:seed`. Phone widths 375, 390, and 402 were checked in Chrome, not on a physical iPhone. OPFS itself was not exercised by that headless run if the preview origin could not open a sync access handle; the IndexedDB snapshot path is what keeps the page working when OPFS init fails.
